@@ -1,0 +1,6 @@
+Apache-2.0
+
+This project is licensed under the Apache License 2.0.
+The full license text is in the top-level LICENSE file.
+
+SPDX-License-Identifier: Apache-2.0
