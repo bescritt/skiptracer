@@ -3,7 +3,7 @@ from ..base import PageGrabber
 from ...colors.default_colors import DefaultBodyColors as bc
 import requests
 import configparser
-import pkg_resources
+from ..base import _package_path
 
 
 class LinkedInSalesGrabber(PageGrabber):
@@ -31,8 +31,7 @@ class LinkedInSalesGrabber(PageGrabber):
         """
         super(LinkedInSalesGrabber, self).__init__()
         self.config = configparser.ConfigParser()
-        get_plugin_cats = pkg_resources.resource_filename('skiptracer','../../setup.cfg')
-        self.config.read(get_plugin_cats)
+        self.config.read(_package_path('skiptracer.cfg'))
         self.homepageurl = self.config['plugin.linkedin']['homepageurl']
         self.loginurl = self.config['plugin.linkedin']['loginurl']
         self.logouturl = self.config['plugin.linkedin']['logouturl']

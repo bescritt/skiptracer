@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 from __future__ import print_function
-from pkg_resources import get_distribution
 from .help_menu import HelpMenu
+from ..colors.default_colors import DefaultBodyColors as bc
+from ..plugins import proxygrabber as pg
 
 import sys
 import configparser
-import pkg_resources
 import ast
 import builtins as bi
 
+from ..plugins.base import _package_path
 
-class DefaultMenus():
 
+class DefaultMenus:
     plugin_list = {}
     config = []
     emodules = []
@@ -23,72 +24,58 @@ class DefaultMenus():
     search_string = ''
 
     default_items = [
-        {'key':'all', 'text':'All - Run all modules associated with this group'},
-        {'key':'back', 'text':'Back - Return to main menu'},
-        {'key':'exit', 'text':'Exit - Terminate the application'}
+        {'key': 'all', 'text': 'All - Run all modules associated with this group'},
+        {'key': 'back', 'text': 'Back - Return to main menu'},
+        {'key': 'exit', 'text': 'Exit - Terminate the application'}
     ]
 
     ltypes = [
-        {'key':'proxy', 'text':'Proxy - Set a request proxy'},
-        {'key':'email', 'text':'Email - Search targets by email address'},
-        {'key':'name', 'text':'Name - Search targets by First Last name combination'},
-        {'key':'phone', 'text':'Phone - Search targets by telephone number'},
-        {'key':'screen', 'text':'Screen Name - Search targets by known alias'},
-        {'key':'license', 'text':'License Plate - Search targets by license plate'},
-        {'key':'profiler', 'text':'Profiler - A "Guess Who" Q&A interactive user interface'},
-        {'key':'help', 'text':'Help - Details the application and use cases'},
-        {'key':'exit', 'text':'Exit - Terminate the application'}
+        {'key': 'proxy', 'text': 'Proxy - Set a request proxy'},
+        {'key': 'email', 'text': 'Email - Search targets by email address'},
+        {'key': 'name', 'text': 'Name - Search targets by First Last name combination'},
+        {'key': 'phone', 'text': 'Phone - Search targets by telephone number'},
+        {'key': 'screen', 'text': 'Screen Name - Search targets by known alias'},
+        {'key': 'license', 'text': 'License Plate - Search targets by license plate'},
+        {'key': 'profiler', 'text': 'Profiler - A "Guess Who" Q&A interactive user interface'},
+        {'key': 'help', 'text': 'Help - Details the application and use cases'},
+        {'key': 'exit', 'text': 'Exit - Terminate the application'}
     ]
 
-
     def __init__(self, plugins):
-        """
-        Get a list of plugins
-        """
+        """Get a list of plugins."""
         self.plugin_list = plugins
         self.config = configparser.ConfigParser()
-        get_plugin_cats = pkg_resources.resource_filename('skiptracer','../../setup.cfg')
-        self.config.read(get_plugin_cats)
-
+        self.config.read(_package_path('skiptracer.cfg'))
 
     def useproxy(self):
-        """
-        Generate a new proxy
-        for masking requests
-        """
+        """Generate a new proxy for masking requests."""
         if str(bi.webproxy).lower() == "y":
             bi.proxy = pg.new_proxy()
             return True
         else:
             return False
 
-
     def helpmenu(self):
-        """
-        Display help text
-        to user
-        """
+        """Display help text to user."""
         HelpMenu()
 
-
     def intromenu(self):
-        """
-        Top level intro menu
-        """
+        """Top level intro menu."""
         self.search_string = ""
         bi.lookup = ''
         if self.useproxy():
             print("\t  [" + bc.CRED + "::ATTENTION::" + bc.CEND + "]" +
-                bc.CYLW + " Proxied requests are unreliable " + bc.CEND +
-                "[" + bc.CRED + "::ATTENTION::" + bc.CEND + "]")
+                  bc.CYLW + " Proxied requests are unreliable " + bc.CEND +
+                  "[" + bc.CRED + "::ATTENTION::" + bc.CEND + "]")
 
         gselect = ""
-        for i,v in enumerate(self.ltypes):
-            print('['+str(i+1)+'] -' + self.ltypes[i]['text'])
+
+        for i, v in enumerate(self.ltypes):
+            print('[' + str(i + 1) + '] -' + self.ltypes[i]['text'])
 
         try:
             selection = int(input("[!] Lookup menu - Please select a number:"))
-            gselect = self.ltypes[selection-1]['key']
+            gselect = self.ltypes[selection - 1]['key']
         except Exception as failselect:
             print("Please use an integer value for your selection!")
 
@@ -113,49 +100,33 @@ class DefaultMenus():
         if gselect == "help":
             self.helpmenu()
 
-
     def grabplugins(self, plugin_type, plugin_list):
-        """
-        Grab a list of relevant plugins.
-        plugin_type = ref to variable to store list of plugin modules
-        plugin_list = the list from the setup.cfg to use
-        """
+        """Grab a list of relevant plugins."""
         for i in plugin_list:
             tc = ast.literal_eval(plugin_list[i])
             plugin_type.append({'key': i, 'text': tc[0] + " - " + tc[1]})
 
         return plugin_type + self.default_items
 
-
-
-
     def grabuserchoice(self, plugin_type, textsub):
-        """
-        Function to grab user choice.
-        plugin_type = var with list of plugin modules
-        textsub = String to display in menu e.g. Email, Name
-        """
+        """Grab user choice."""
         gselect = ""
 
-        print(" [!] "+textsub+" search menu - Please select a number")
+        print(" [!] " + textsub + " search menu - Please select a number")
 
-        for i,v in enumerate(plugin_type):
-            print(' ['+str(i+1)+'] -' + plugin_type[i]['text'])
+        for i, v in enumerate(plugin_type):
+            print(' [' + str(i + 1) + '] -' + plugin_type[i]['text'])
 
         try:
             selection = int(input(" [!] Select a number to continue: "))
-            gselect = plugin_type[selection-1]['key']
+            gselect = plugin_type[selection - 1]['key']
         except Exception as failselect:
             print("Please use an integer value for your selection!")
 
         return gselect
 
-
     def selectchoice(self, menu, mtype, error, plugins, gselect):
-        """
-        Select a menu item and then
-        action it.
-        """
+        """Select a menu item and then action it."""
         if gselect == "":
             menu()
         if gselect == "exit":
@@ -176,20 +147,12 @@ class DefaultMenus():
                 self.plugin_list[i]().get_info(self.search_string, mtype)
         menu()
 
-
     def proxymenu(self):
-        """
-        Set a proxy for requests
-        """
-
-        print ("proxy menu")
+        """Set a proxy for requests."""
+        print("proxy menu")
 
     def emailmenu(self):
-        """
-        Display the email modules to the
-        user.
-        """
-
+        """Display the email modules to the user."""
         self.emodules = []
         self.emodules = self.grabplugins(self.emodules, self.config['menu.email'])
         gselect = self.grabuserchoice(self.emodules, "E-Mail")
@@ -203,10 +166,7 @@ class DefaultMenus():
         )
 
     def namemenu(self):
-        """
-        Print menu for
-        name matching plugins
-        """
+        """Print menu for name matching plugins."""
         self.nmodules = []
         self.nmodules = self.grabplugins(self.nmodules, self.config['menu.name'])
         gselect = self.grabuserchoice(self.nmodules, "Name")
@@ -220,13 +180,11 @@ class DefaultMenus():
         )
 
     def phonemenu(self):
-        """
-        Display the phone
-        menu to the user.
-        """
+        """Display the phone menu to the user."""
         self.pmodules = []
         self.pmodules = self.grabplugins(self.pmodules, self.config['menu.phone'])
         gselect = self.grabuserchoice(self.pmodules, "Phone")
+
         self.selectchoice(
             self.phonemenu,
             "phone",
@@ -236,11 +194,10 @@ class DefaultMenus():
         )
 
     def snmenu(self):
-        """
-        Screen Name grabbing tools menu
-        """
+        """Screen Name grabbing tools menu."""
         self.snmodules = self.grabplugins(self.snmodules, self.config['menu.screenname'])
         gselect = self.grabuserchoice(self.snmodules, "Screen Name")
+
         self.selectchoice(
             self.snmenu,
             "screenname",
@@ -250,9 +207,7 @@ class DefaultMenus():
         )
 
     def platemenu(self):
-        """
-        Enter a plate number
-        """
+        """Enter a plate number."""
         self.plmodules = self.grabplugins(self.plmodules, self.config['menu.plate'])
         gselect = self.grabuserchoice(self.plmodules, "Plate Number")
 
@@ -265,9 +220,7 @@ class DefaultMenus():
         )
 
     def profiler(self):
-        """
-        Profiler output - guess who interactive interface
-        """
+        """Profiler output - guess who interactive interface."""
         fname = input("\t[Whats the users first name? - ex: Alice]: ")
         lname = input("\t[Whats the users last name? - ex: Smith]: ")
         bi.name = fname + " " + lname

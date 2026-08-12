@@ -25,10 +25,8 @@ setup(
     package_dir={'': 'src'},
     include_package_data=True,
     packages=find_packages('src'),
-    plugins = [],
-    hello = [],
     entry_points={
-        'console_script': [
+        'console_scripts': [
             'skiptracer = skiptracer.__main__:main'
         ],
         'skiptracer.plugins': [
@@ -58,14 +56,13 @@ setup(
         'bs4',
         'lxml',
         'requests',
-        'ipdb',
-        'pprint',
-        'click',
-        'cfscrape',
         'numpy',
-        'simplejson',
         'tqdm',
-        'selenium',
         'python-dotenv'
-    ]
+    ],
+    extras_require={
+        'tor': ['requests[socks]'],
+        'browser': ['selenium'],
+        'scraper': ['cfscrape'],
+    }
 )

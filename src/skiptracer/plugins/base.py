@@ -8,29 +8,39 @@ from dotenv import dotenv_values
 
 import requests
 import random
-import requests
 import json
-# monkey patch socket to use only IPv4
-import socket
-import pkg_resources
 import builtins as bi
 
-og = socket.getaddrinfo
+# monkey patch socket to use only IPv4 (guard against double-patching)
+import socket
+if not getattr(socket, '_skiptracer_patched', False):
+    og = socket.getaddrinfo
 
-def ng(*args, **kwargs):
-    res = og(*args, **kwargs)
-    return [r for r in res if r[0] == socket.AF_INET]
+    def ng(*args, **kwargs):
+        res = og(*args, **kwargs)
+        return [r for r in res if r[0] == socket.AF_INET]
+
+    socket.getaddrinfo = ng
+    socket._skiptracer_patched = True
 
 
-socket.getaddrinfo = ng
+def _package_path(*parts):
+    """Resolve a path inside the installed skiptracer.data package."""
+    try:
+        try:
+            from importlib.resources import files
+            return str(files('skiptracer.data').joinpath(*parts))
+        except Exception:
+            import pkg_resources
+            return pkg_resources.resource_filename('skiptracer', 'data/' + '/'.join(parts))
+    except Exception:
+        import os
+        return os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', *parts)
 
 
 def random_line():
-    """
-    Gets random User-Agent string from local DB file
-    """
-    get_user_agents = pkg_resources.resource_filename('skiptracer','../../storage/user-agents.db')
-    afile = open(get_user_agents)
+    """Get a random User-Agent string from the local DB file."""
+    afile = open(_package_path('user-agents.db'))
     line = next(afile)
     for num, aline in enumerate(afile):
         if random.randrange(num + 2):
@@ -40,31 +50,24 @@ def random_line():
 
 
 class PageGrabber:
-    """
-    Base PageGrabber Class
-    Base function to import request functionality in modules
-    """
+    """Base PageGrabber Class. Import request functionality in modules."""
 
     def __init__(self):
-        """
-        Initialize defaults as needed
-        """
         self.env = dotenv_values()
         self.info_dict = {}
         self.info_list = []
         self.ua = random_line()
         self.proxy = {}
-
+        self.soup = None
+        self.source = None
 
     def get_source(self, url):
-        """
-        Returns source code from given URL
-        """
+        """Return source code from given URL."""
         headers = {"User-Agent": self.ua}
         reqcom = 0
         requests.packages.urllib3.disable_warnings()
         results = ""
-    
+
         while reqcom < 5:
             try:
                 if bi.proxy != '':
@@ -98,9 +101,7 @@ class PageGrabber:
         return results.encode('ascii', 'ignore').decode("utf-8")
 
     def post_data(self, url, data):
-        """
-        Sends POST request of given DATA, URL
-        """
+        """Send POST request of given DATA, URL."""
         headers = {"User-Agent": self.ua}
         reqcom = 0
         requests.packages.urllib3.disable_warnings()
@@ -113,7 +114,7 @@ class PageGrabber:
                     timeout=10,
                     verify=False,
                     allow_redirects=True,
-                    data=postdata
+                    data=data
                 ).text
                 reqcom = 1
                 return results.encode('ascii', 'ignore').decode("utf-8")
@@ -123,13 +124,9 @@ class PageGrabber:
         return
 
     def get_dom(self, source):
-        """
-        Returns BeautifulSoup DOM
-        """
+        """Return BeautifulSoup DOM (lxml parser)."""
         return BeautifulSoup(source, 'lxml')
 
     def get_html(self, source):
-        """
-        Returns BeautifulSoup DOM
-        """
+        """Return BeautifulSoup DOM (html.parser)."""
         return BeautifulSoup(source, 'html.parser')

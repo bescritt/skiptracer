@@ -9,11 +9,23 @@ from .. import proxygrabber
 import logging
 import json
 import ast
-import cfscrape
 try:
     import __builtin__ as bi
 except BaseException:
     import builtins as bi
+
+
+def _make_scraper():
+    """Return a cfscrape scraper or None if the optional dep is unavailable."""
+    try:
+        import cfscrape
+        return cfscrape.create_scraper()
+    except Exception as e:
+        print(
+            "  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+            "cfscrape unavailable (install with: pip install "
+            "skiptracer[scraper]): {}\n".format(e) + bc.CEND)
+        return None
 
 
 class HaveIBeenPwwnedGrabber(PageGrabber):
@@ -40,7 +52,9 @@ class HaveIBeenPwwnedGrabber(PageGrabber):
             url = 'https://haveibeenpwned.com/api/v3/breachedaccount/{}'.format(
                 email)
 
-            scraper = cfscrape.create_scraper()
+            scraper = _make_scraper()
+            if scraper is None:
+                return
             headers = {
                 'user-agent': self.ua,
                 'hibp-api-key': self.env['HAVEIBEENPWNED_API_KEY']

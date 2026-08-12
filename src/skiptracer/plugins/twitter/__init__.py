@@ -12,14 +12,9 @@ try:
     from bs4 import BeautifulSoup as bs
 except Exception as e:
     print(
-        "  [" +
-        bc.CRED +
-        "X" +
-        bc.CEND +
-        "] " +
-        bc.CYLW +
-        "Failed at importing BeautifulSoup from bs4: {}\n" +
-        bc.CEND).format(e)
+        "  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+        "Failed at importing BeautifulSoup from bs4: {}\n".format(e) + bc.CEND)
+
 try:
     from selenium.webdriver import Firefox
     from selenium.webdriver.common.by import By
@@ -29,19 +24,14 @@ try:
     from selenium.webdriver.firefox.options import Options
 except Exception as e:
     print(
-        "  [" +
-        bc.CRED +
-        "X" +
-        bc.CEND +
-        "] " +
-        bc.CYLW +
-        "Failed at importing selenium requirements: {}\n" +
-        bc.CEND).format(e)
+        "  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+        "Selenium (optional) not available: {}\n".format(e) + bc.CEND)
 try:
     from tqdm import tqdm
 except Exception as e:
-    print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
-          "Failed at importing tqdm from tdqm: {}\n" + bc.CEND).format(e)
+    print(
+        "  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+        "Failed at importing tqdm: {}\n".format(e) + bc.CEND)
 import os
 
 

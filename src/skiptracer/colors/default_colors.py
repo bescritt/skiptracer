@@ -9,3 +9,8 @@ class DefaultBodyColors:  # Sets colorization for application use
     CPRP = '\033[95m'
     CEND = '\033[0m'
     CFON = '\33[5m'
+
+    @classmethod
+    def use(cls, code):
+        """Return the escape sequence for a short code (e.g. 'RED', 'GRN')."""
+        return getattr(cls, 'C' + str(code).upper(), cls.CEND)

@@ -2,7 +2,8 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-import pkg_resources
+from importlib.metadata import entry_points
+
 import sys
 import signal
 import json
@@ -15,11 +16,8 @@ except BaseException:
 
 
 class SkipTracer:
-    """
-    Kick off the SkipTracer
-    program
-    """
-    #bi.search_string = ''
+    """Kick off the SkipTracer program."""
+
     bi.lookup = ''
     bi.webproxy = ""
     bi.proxy = ""
@@ -34,10 +32,7 @@ class SkipTracer:
     loaded_colors_plugin_dict = {}
 
     def __init__(self, plugins):
-        """
-        Load all the different types
-        of plugin
-        """
+        """Load all the different types of plugin."""
         self.inc_plugins = plugins
 
         self.loaded_plugins_plugin_dict = self.load_plugins(
@@ -49,17 +44,17 @@ class SkipTracer:
         self.loaded_colors_plugin_dict = self.load_plugins(
             self.colors_plugin)
 
-        #only supporting default menu for now
-        self.loaded_menus_plugin_dict['default_menus'](self.loaded_plugins_plugin_dict).intromenu()
-
+        # only supporting default menu for now
+        self.loaded_menus_plugin_dict['default_menus'](
+            self.loaded_plugins_plugin_dict).intromenu()
 
     def load_plugins(self, plugin):
-        """
-        Load the plugin and store
-        object in an array
-        """
+        """Load the plugin and store object in a dict."""
         plugin_dict = {}
-
-        for p in pkg_resources.iter_entry_points(plugin):
-                plugin_dict[p.name] = p.load()
+        if hasattr(entry_points(), 'select'):
+            eps = entry_points().select(group=plugin)
+        else:  # pragma: no cover - older importlib.metadata
+            eps = entry_points().get(plugin, [])
+        for p in eps:
+            plugin_dict[p.name] = p.load()
         return plugin_dict

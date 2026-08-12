@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python
 from __future__ import print_function
-from pkg_resources import get_distribution
+from importlib.metadata import version as _pkg_version
 
 import sys
 import configparser
-import pkg_resources
 import ast
 
 try:
