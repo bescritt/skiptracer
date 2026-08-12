@@ -1,12 +1,13 @@
+.git
+.gitignore
 .venv/
 __pycache__/
 *.pyc
 *.egg-info/
 build/
 dist/
-storage/proxies.txt
-.env
 legacy-py2/
 storage/
-*.egg-info
-__pycache__/
+.env
+.pytest_cache/
+.idea/

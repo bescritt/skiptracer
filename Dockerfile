@@ -1,26 +1,23 @@
-FROM python:3.7-slim
+# Skiptracer — Python 3 OSINT web-scraping framework
+FROM python:3.13-slim
 
-MAINTAINER sietekk "sietekk@gmail.com"
+LABEL org.opencontainers.image.title="skiptracer" \
+      org.opencontainers.image.version="4.0.0" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.description="OSINT web-scraping framework (Python 3)."
 
+WORKDIR /app
+
+# Install build deps, then the package (leverages Docker layer caching).
 COPY requirements.txt /app/requirements.txt
+RUN pip3 install --no-cache-dir --upgrade pip \
+    && pip3 install --no-cache-dir -r /app/requirements.txt
 
-RUN pip3 install --no-cache-dir -r /app/requirements.txt
+COPY . /app
 
-COPY  . /app
+RUN pip3 install --no-cache-dir .
 
+# Drop into the source tree and launch the CLI (interactive by default;
+# `docker run skiptracer --version` prints the version and exits).
 WORKDIR /app/src
-
-FROM ubuntu:latest
-MAINTAINER Furkan SAYIM <furkan.sayim@yandex.com>
-
-RUN apt-get update \
-    && apt-get install git -y \
-    && apt-get install python -y \
-    && apt-get install python-pip -y \
-    && git clone https://github.com/xillwillx/skiptracer.git
-
-RUN pip install -r skiptracer/requirements.txt
-
-CMD python skiptracer.py
-
-WORKDIR /skiptracer
+ENTRYPOINT ["python3", "-m", "skiptracer"]

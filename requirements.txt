@@ -1,14 +1,12 @@
-python-docx
-urllib3
+# Generated from setup.py install_requires. Do not edit by hand.
+
 bs4
 lxml
 requests
-ipdb
-pprint
-click
-cfscrape
-numpy
-simplejson
 tqdm
-selenium
 python-dotenv
+
+# Optional extras (pip install skiptracer[extra]):
+#   [tor] requests[socks]
+#   [browser] selenium
+#   [scraper] cfscrape
