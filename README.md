@@ -1,5 +1,7 @@
 # Skiptracer — OSINT web-scraping framework
 
+![banner](artwork/banner.png)
+
 ![python](https://img.shields.io/badge/python-3.13-blue.svg)
 ![version](https://img.shields.io/badge/version-4.0.0-brightgreen.svg)
 ![license](https://img.shields.io/badge/license-Apache%202.0-lightgrey.svg)
