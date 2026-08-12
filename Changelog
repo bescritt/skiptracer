@@ -1,4 +1,5 @@
-This file documents any additions or modifications to the project
+This file documents additions or modifications to the project.
+
   +---------+-----------------+--------------------------------------------------+
   | AUTHOR  |     DATE        |                    DESCRIPTION                   |
   +---------+-----------------+--------------------------------------------------+
@@ -10,3 +11,13 @@ This file documents any additions or modifications to the project
     WSC -:  Nov. 5th, 2018  :-  Added DOCX report generator to intro menu
      *       *    *     *       | --  Option 88 to execute module
     WSC -:  Nov. 5th, 2018  :-  Added Changelog, as requested by: 'Maxe'
+
+  +---------+-----------------+--------------------------------------------------+
+  | Migration to Python 3 (v4.0.0, Mission-Critical)                         |
+  +---------+-----------------+--------------------------------------------------+
+    HERMES -:  Aug. 12th, 2026 :-  Migrated codebase from Python 2 to Python 3.13
+    HERMES -:  Aug. 12th, 2026 :-  Rewrote datasaver, menus, base, and entry points; modernized pkg_resources to importlib
+    HERMES -:  Aug. 12th, 2026 :-  Built full pytest suite (65 tests, mocked HTTP); fixed 12 migration defects caught by tests
+    HERMES -:  Aug. 12th, 2026 :-  Hardened CLI against EOF and KeyboardInterrupt; added end-to-end integration test
+    HERMES -:  Aug. 12th, 2026 :-  Normalized license to Apache 2.0 (README badge previously showed GPLv3 in error)
+    HERMES -:  Aug. 12th, 2026 :-  Tagged skiptracer-prod-v3.0.0 and skiptracer-mc-v4.0.0 after judge-gate verification
