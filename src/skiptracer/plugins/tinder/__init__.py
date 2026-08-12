@@ -41,7 +41,7 @@ class TinderGrabber(PageGrabber):
             "%s" %
             username)
         if soup.body.find_all(
-                text='Looking for Someone?'):  # check if CAPTCHA was triggered
+                string='Looking for Someone?'):  # check if CAPTCHA was triggered
             print("  [" + bc.CRED + "X" + bc.CEND + "] " +
                   bc.CYLW + "No Profile Found.\n" + bc.CEND)
             return

@@ -69,18 +69,19 @@ class DefaultMenus:
                   "[" + bc.CRED + "::ATTENTION::" + bc.CEND + "]")
 
         gselect = ""
+        while gselect == "":
+            for i, v in enumerate(self.ltypes):
+                print('[' + str(i + 1) + '] -' + self.ltypes[i]['text'])
 
-        for i, v in enumerate(self.ltypes):
-            print('[' + str(i + 1) + '] -' + self.ltypes[i]['text'])
+            try:
+                selection = int(input("[!] Lookup menu - Please select a number:"))
+                gselect = self.ltypes[selection - 1]['key']
+            except (ValueError, EOFError, KeyboardInterrupt) as failselect:
+                if isinstance(failselect, (EOFError, KeyboardInterrupt)):
+                    print("\n [!] Input closed -- exiting.")
+                    sys.exit(0)
+                print("Please use an integer value for your selection!")
 
-        try:
-            selection = int(input("[!] Lookup menu - Please select a number:"))
-            gselect = self.ltypes[selection - 1]['key']
-        except Exception as failselect:
-            print("Please use an integer value for your selection!")
-
-        if gselect == "":
-            self.intromenu()
         if gselect == "exit":
             sys.exit()
         if gselect == "proxy":
@@ -120,7 +121,10 @@ class DefaultMenus:
         try:
             selection = int(input(" [!] Select a number to continue: "))
             gselect = plugin_type[selection - 1]['key']
-        except Exception as failselect:
+        except (ValueError, EOFError, KeyboardInterrupt) as failselect:
+            if isinstance(failselect, (EOFError, KeyboardInterrupt)):
+                print("\n [!] Input closed -- exiting.")
+                sys.exit(0)
             print("Please use an integer value for your selection!")
 
         return gselect

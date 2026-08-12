@@ -16,7 +16,7 @@ long_description = read('README.md')
 
 setup(
     name='skiptracer',
-    version='3.0.0',
+    version='4.0.0',
     description='OSINT python webscaping framework',
     long_description=long_description,
     maintainer='xillwillx',

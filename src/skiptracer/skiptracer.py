@@ -48,7 +48,8 @@ class SkipTracer:
         self.loaded_menus_plugin_dict['default_menus'](
             self.loaded_plugins_plugin_dict).intromenu()
 
-    def load_plugins(self, plugin):
+    @classmethod
+    def load_plugins(cls, plugin):
         """Load the plugin and store object in a dict."""
         plugin_dict = {}
         if hasattr(entry_points(), 'select'):
