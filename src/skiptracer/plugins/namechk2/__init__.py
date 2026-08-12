@@ -60,6 +60,7 @@ class NameChkGrabber(PageGrabber):
                     "colourlovers", "eyeem", "kanoworld", "askfm", "smashcast", "badoo",
                     "newgrounds", "younow", "patreon", "mixcloud", "gumroad", "quora"]
         soup = self.get_dom(r.text)
+        csrf = ''
         try:
             csrf = str(soup.find_all(name="meta")[-1]).split('"')[1]
         except Exception as e:
@@ -71,10 +72,12 @@ class NameChkGrabber(PageGrabber):
         def get_cookie(cookies):
             for x in cookies.keys():
                 return '{}:{}; '.format(x, cookies[x]),
+            return ('',)
 
         def get_token():
-            return list(
-                set(tree.xpath("//input[@name='authenticity_token']/@value")))[0]
+            vals = list(
+                set(tree.xpath("//input[@name='authenticity_token']/@value")))
+            return vals[0] if vals else ''
         token = get_token()
         headers = {"authority": "namechk.com",
                    "method": "POST",

@@ -22,10 +22,12 @@ try:
     from selenium.webdriver.support.ui import Select
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.firefox.options import Options
+    SELENIUM_OK = True
 except Exception as e:
     print(
         "  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
         "Selenium (optional) not available: {}\n".format(e) + bc.CEND)
+    SELENIUM_OK = False
 try:
     from tqdm import tqdm
 except Exception as e:
@@ -49,6 +51,11 @@ class TwitterGrabber(PageGrabber):
 
         print("[" + bc.CPRP + "?" + bc.CEND + "] " +
               bc.CCYN + "Twitter" + bc.CEND)
+        if not SELENIUM_OK:
+            print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+                  "Selenium is required for the Twitter plugin. "
+                  "Install with: pip install skiptracer[browser]\n" + bc.CEND)
+            return
         print(" [" + bc.CGRN + "!" + bc.CEND + "] " + bc.CRED +
               "Module takes some time to load, please wait!" + bc.CEND)
 
@@ -77,7 +84,7 @@ class TwitterGrabber(PageGrabber):
             soup = bs(b.page_source, 'lxml')
             validname = str(soup.h1).split()[-2].split('/')[1].split('"')[0]
             avatar = str(
-                soup.findAll(
+                soup.find_all(
                     'img', {
                         'class', 'avatar', 'js-action-profile-avatar'})[3]['src'])
             profnav = soup.find_all('span', {'class', 'ProfileNav-value'})
@@ -119,7 +126,7 @@ class TwitterGrabber(PageGrabber):
             soup = bs(h, 'lxml')
             datelist = list()
             timelist = list()
-            for d in soup.findAll('li', {'class', 'js-stream-item'}):
+            for d in soup.find_all('li', {'class', 'js-stream-item'}):
                 print("\n  [+]", "-" * 80)
                 if 'Retweeted' in d.p.text:
                     print(" [" + bc.CGRN + "!" + bc.CEND + "] " +
@@ -128,7 +135,7 @@ class TwitterGrabber(PageGrabber):
                     print(" [" + bc.CGRN + "!" + bc.CEND + "] " +
                           bc.CRED + "Pinned: " + bc.CEND)
                 try:
-                    tlist = d.findAll('a')
+                    tlist = d.find_all('a')
                     dt = tlist[1]['title']
                 except Exception as e:
                     try:

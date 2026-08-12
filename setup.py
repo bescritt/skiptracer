@@ -56,7 +56,6 @@ setup(
         'bs4',
         'lxml',
         'requests',
-        'numpy',
         'tqdm',
         'python-dotenv'
     ],

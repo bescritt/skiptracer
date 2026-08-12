@@ -169,7 +169,7 @@ class TruthFinderGrabber(PageGrabber):
 
         if lookup == "phone":
             phonere = re.compile(
-                '(\d\d\d\d\d\d\d\d\d\d|\d\d\d[\s.-]\d\d\d[\s.-]\d\d\d\d)')
+                r'(\d\d\d\d\d\d\d\d\d\d|\d\d\d[\s.-]\d\d\d[\s.-]\d\d\d\d)')
 
             if phonere.findall(information):
                 try:
@@ -224,7 +224,7 @@ class TruthFinderGrabber(PageGrabber):
         self.soup = self.get_dom(self.source)
 
         try:
-            ul = self.soup.findAll("ul")
+            ul = self.soup.find_all("ul")
             for xul in ul:
                 perlen = len(str(xul).split("\n"))
                 broken = str(xul).split("\n")

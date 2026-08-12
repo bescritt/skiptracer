@@ -5,7 +5,6 @@
 from __future__ import print_function
 from ..base import PageGrabber
 from ...colors.default_colors import DefaultBodyColors as bc
-import numpy as np
 
 try:
     import __builtin__ as bi
@@ -35,7 +34,7 @@ class WhoisMindGrabber(PageGrabber):
             url = 'https://whoisamped.com/email/{}{}'.format(email, '.html')
             source = self.get_source(url)
             soup = self.get_dom(source)
-            href = soup.findAll('a')
+            href = soup.find_all('a')
 
         except Exception as urlgrabfailed:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
@@ -57,7 +56,15 @@ class WhoisMindGrabber(PageGrabber):
             print("  [" + bc.CRED + "X" + bc.CEND + "] " +
                   bc.CYLW + "WhoisMind returned no results" + bc.CEND)
         else:
-            self.info_list.append(list(np.unique(np.array(whoisdb))))
+            # De-duplicate by domain, preserving first-seen order
+            seen = set()
+            unique = []
+            for entry in whoisdb:
+                d = entry.get('domain')
+                if d not in seen:
+                    seen.add(d)
+                    unique.append(entry)
+            self.info_list.append(unique)
             bi.outdata['whoismind'] = self.info_list[0]
         print()
         return self.info_list

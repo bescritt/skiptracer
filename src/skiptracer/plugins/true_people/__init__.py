@@ -46,9 +46,12 @@ class TruePeopleGrabber(PageGrabber):
               bc.CCYN + "TruePeopleSearch" + bc.CEND)
 
         self.true_try(lookup, information)
+        return self.info_dict
 
 
     def check_for_captcha(self):
+        if self.soup is None:
+            return False
         captcha = self.soup.find('div', attrs={'class': 'g-recaptcha'})
         if bi.webproxy and captcha is not None:
             try:
@@ -118,7 +121,7 @@ class TruePeopleGrabber(PageGrabber):
         """
         Create the URL with the phone number
         """
-        phonere = re.compile('(\d\d\d\d\d\d\d\d\d\d|\d\d\d[\s.-]\d\d\d[\s.-]\d\d\d\d)')
+        phonere = re.compile(r'(\d\d\d\d\d\d\d\d\d\d|\d\d\d[\s.-]\d\d\d[\s.-]\d\d\d\d)')
 
         if phonere.findall(information):
             self.url = 'https://www.truepeoplesearch.com/results?phoneno={}'.format(
@@ -145,8 +148,9 @@ class TruePeopleGrabber(PageGrabber):
         """
         Check if any records were found
         """
-
-        recordcount = self.soup.findAll('div', {'class', 'card-summary'})
+        if self.soup is None:
+            return False
+        recordcount = self.soup.find_all('div', {'class', 'card-summary'})
 
         if len(recordcount) == 0:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " +

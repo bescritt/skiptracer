@@ -53,7 +53,7 @@ class VinGrabber(PageGrabber):
                   "No source returned, try again later ...\n" + bc.CEND)
             return
         try:
-            cells = table.findAll("td")
+            cells = table.find_all("td")
         except BaseException:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " +
                   bc.CYLW + "No results were found ...\n" + bc.CEND)
