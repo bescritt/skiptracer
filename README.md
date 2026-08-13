@@ -23,7 +23,7 @@ Skiptracer:
 ### From source
 
 ```bash
-$ git clone https://github.com/xillwillx/skiptracer.git
+$ git clone https://github.com/bescritt/skiptracer.git
 $ cd skiptracer
 $ python3 -m venv .venv
 $ .venv/bin/python -m pip install -e .

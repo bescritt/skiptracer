@@ -1,0 +1,32 @@
+name: Bug report
+description: Report a defect in Skiptracer
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: How to trigger the behavior (plugin, input, environment).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Skiptracer version
+      placeholder: "4.0.0"
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: "3.13.5"
+    validations:
+      required: true

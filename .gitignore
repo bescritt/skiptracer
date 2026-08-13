@@ -10,3 +10,10 @@ legacy-py2/
 storage/
 *.egg-info
 __pycache__/
+.coverage
+.coverage.*
+.pytest_cache/
+.idea/
+.vscode/
+.mypy_cache/
+htmlcov/

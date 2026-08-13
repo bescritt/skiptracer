@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest a plugin or improvement for Skiptracer
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to see?
+      description: Describe the plugin or change and the public source it targets.
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why is this useful?
+    validations:
+      required: false
