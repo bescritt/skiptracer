@@ -14,11 +14,14 @@ Work pattern
 Quick commands
 - Use tools.agent_adapters.enrich_email("a@b.com") for an example flow.
 - Enumerate installed tools with tools.agent_adapters.list_available_tools().
+- Install package and use the native CLI: pip install . && agent-cli enrich-email -
 
 Safety
 - Public sources only. Respect ToS and robots.txt. Pause and notify human on paywalls or unredacted PII.
 
 Files
-- tools/agent_adapters.py: adapter implementation
+- skiptracer.tools.agent_adapters: adapter implementation
+- skiptracer.tools.agent_cli: headless CLI
 - test/test_agent_adapters.py: unit tests
+- test/test_agent_cli.py: CLI tests
 
