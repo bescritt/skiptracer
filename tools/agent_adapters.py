@@ -115,10 +115,15 @@ def synthesize(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     return summary
 
 
-def persist_summary(summary: Dict[str, Any], filename_prefix: str = "agent-out") -> Any:
+def persist_summary(summary: Dict[str, Any], filename_prefix: str = "agent-out", persist: bool = True) -> Any:
+    """Persist summary using DataSaver. If persist is False, do not write and
+    just return the would-be filename."""
     bi.outdata = summary
+    filename = f"{filename_prefix}-{int(time.time())}.json"
+    if not persist:
+        return filename
     # programmatic, safe write: set filename and call writeout on a raw instance
-    bi.filename = f"{filename_prefix}-{int(time.time())}.json"
+    bi.filename = filename
     ds = DataSaver.__new__(DataSaver)
     try:
         return ds.writeout()
