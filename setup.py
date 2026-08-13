@@ -27,7 +27,8 @@ setup(
     packages=find_packages('src'),
     entry_points={
         'console_scripts': [
-            'skiptracer = skiptracer.__main__:main'
+            'skiptracer = skiptracer.__main__:main',
+            'agent-cli = skiptracer.tools.agent_cli:main'
         ],
         'skiptracer.plugins': [
             'fouroneone_info = skiptracer.plugins.fouroneone:FourOneOneGrabber',
