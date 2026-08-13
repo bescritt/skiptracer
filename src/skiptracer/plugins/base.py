@@ -105,7 +105,7 @@ class PageGrabber:
         headers = {"User-Agent": self.ua}
         reqcom = 0
         requests.packages.urllib3.disable_warnings()
-        while reqcom == 0:
+        while reqcom < 5:
             try:
                 results = requests.post(
                     url,
@@ -116,11 +116,11 @@ class PageGrabber:
                     allow_redirects=True,
                     data=data
                 ).text
-                reqcom = 1
                 return results.encode('ascii', 'ignore').decode("utf-8")
             except Exception as failedreq:
                 if bi.webproxy:
                     bi.proxy = proxygrabber.new_proxy()
+                reqcom = reqcom + 1
         return
 
     def get_dom(self, source):
