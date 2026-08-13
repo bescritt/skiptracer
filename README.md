@@ -114,3 +114,6 @@ $ python3 -m pytest test/ -v
 ## License
 
 Apache License 2.0. See `LICENSE` for the full text.
+
+## Agent adapters and runbook
+A hermes-brain style adapter lives in `tools/agent_adapters.py` with a short runbook in `docs/AGENT_RUNBOOK.md`. It provides parallel_probe, retries, verification, synthesis, and persistence helpers to safely orchestrate plugin calls.
