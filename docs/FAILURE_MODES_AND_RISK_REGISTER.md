@@ -77,13 +77,19 @@ Carried from RAID (R1–R5) and the failure modes above. Status: Closed / Mitiga
 | PR-11 | Supply-chain malicious dep | RC-C | Mitigated | lazy optional deps; lockfile review |
 | PR-12 | Runaway loop | RC-E | Mitigated | bounded loops (T2 circuit breaker) |
 
-## 4. How the 12 new OSINT skills address these
+## 4. How the 14 OSINT skills address these
 
-Each new skill encodes a control for one-or-more clusters:
+[TODO] Verify exact hardening/domain split. Empirically: 14 skills under
+`~/.hermes/skills/osint/`, all `category: osint` (no 7/7 metadata exists); a
+thematic tally runs ~8 hardening-leaning + 6 domain-leaning, NOT 7+7. The
+"7 hardening + 7 domain" split was asserted once and falsified (subagent
+verified count=14, all frontmatter valid, no dangling refs, but the 7/7 split
+is unbacked by any artifact). Each skill encodes a control for one-or-more
+clusters:
 - `osint-input-harden` → RC-A (F1,F3,F4,F17)
 - `osint-secret-hygiene` → RC-C (F5,F24)
 - `osint-dependency-audit` → RC-C (F6,F22)
-- `contract-monitor` (general reliability control, not OSINT-specific) → RC-F/PR-10 (F14)
+- `contract-monitor` (general reliability control, not OSINT-specific; relocated to `debugging/`) → RC-F/PR-10 (F14)
 - `osint-deterministic-test` → RC-D (F8,F26)
 - `osint-state-isolation` → RC-B (F7,F10,F20,F25)
 - `osint-resource-bounds` → RC-E (F9,F11,F18,F23)
