@@ -130,14 +130,12 @@ def test_N06_bi_proxy_default_is_string_not_none():
 
 
 def test_N07_bi_filename_unset_when_user_declines_save():
-    """N07 (REAL BUG): DataSaver.__init__ only sets bi.filename when the user
-    answers 'y' to saving. If they answer 'n', bi.filename is never set, yet
-    writeout() later does open(bi.filename). Reproduce the AttributeError by
-    exercising writeout on a constructed (not __init__-run) instance."""
+    """N07: DataSaver.__init__ only sets bi.filename when the user answers 'y'.
+    When filename is unset, writeout() should return None (no-op) rather than
+    raising an AttributeError. Exercise writeout on a constructed instance."""
     ds = DataSaver.__new__(DataSaver)
-    # bi.filename is absent (autouse fixture deleted it) -> open(bi.filename) fails
-    with pytest.raises(AttributeError):
-        ds.writeout()
+    # bi.filename is absent (autouse fixture deleted it) -> writeout should be safe
+    assert ds.writeout() is None
 
 
 def test_N08_bi_outdata_reset_on_construction(fake_input):
@@ -324,14 +322,12 @@ def test_N22_get_html_parser():
 # N23-N27 : random_line / _package_path
 # ---------------------------------------------------------------------------
 def test_N23_random_line_empty_db_raises(monkeypatch, tmp_path):
-    """N23 (REAL BUG): random_line() does next(afile) with no guard. An EMPTY
-    user-agents file raises StopIteration, uncaught, crashing PageGrabber init.
-    Reproduce."""
+    """N23: random_line() should handle an empty UA DB gracefully and return
+    an empty string rather than raising StopIteration."""
     empty = tmp_path / "empty.db"
     empty.write_text("")
     monkeypatch.setattr(base_mod, "_package_path", lambda *a: str(empty))
-    with pytest.raises(StopIteration):
-        random_line()
+    assert random_line() == ""
 
 
 def test_N24_random_line_single_line_ok(monkeypatch, tmp_path):
@@ -490,8 +486,8 @@ def test_N36_proxy_remove_proxy_line_match(monkeypatch, tmp_path):
     f.write_text("1.2.3.4:8080\n5.6.7.8:8080\n")
     pg.remove_proxy(str(f), "1.2.3.4:8080")
     content = f.read_text()
-    # buggy: '1.2.3.4:8080\n' != '1.2.3.4:8080' so the line is KEPT
-    assert "1.2.3.4:8080" in content
+    # ensure the bad proxy line was removed from the storage file
+    assert "1.2.3.4:8080" not in content
 
 
 def test_N37_proxy_get_proxies_parses_elite(monkeypatch):
@@ -562,8 +558,9 @@ def test_N43_grabplugins_literal_eval_malformed(monkeypatch, tmp_path):
     malformed value (unbalanced parens) raises ValueError, uncaught, crashing
     the menu. Reproduce."""
     inst = dm.DefaultMenus({})
-    with pytest.raises((ValueError, SyntaxError)):
-        inst.grabplugins([], {"bad": "('x', 'y'"})  # unbalanced -> SyntaxError
+    # malformed config entries should be skipped, not crash the menu
+    out = inst.grabplugins([], {"bad": "('x', 'y'"})
+    assert out == [] + inst.default_items
 
 
 def test_N44_grabuserchoice_eof_exits():
@@ -626,8 +623,8 @@ def test_N48_load_plugins_import_error_is_fatal():
     try:
         st.entry_points = lambda: types.SimpleNamespace(
             **{"select": fake_select})
-        with pytest.raises(ImportError):
-            st.SkipTracer.load_plugins("skiptracer.plugins")
+        # adapter now isolates plugin import errors; the loader should return {}
+        assert st.SkipTracer.load_plugins("skiptracer.plugins") == {}
     finally:
         st.entry_points = orig
 
