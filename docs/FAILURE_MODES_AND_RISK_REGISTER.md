@@ -83,7 +83,7 @@ Each new skill encodes a control for one-or-more clusters:
 - `osint-input-harden` → RC-A (F1,F3,F4,F17)
 - `osint-secret-hygiene` → RC-C (F5,F24)
 - `osint-dependency-audit` → RC-C (F6,F22)
-- `osint-contract-monitor` → RC-F/PR-10 (F14)
+- `contract-monitor` (general reliability control, not OSINT-specific) → RC-F/PR-10 (F14)
 - `osint-deterministic-test` → RC-D (F8,F26)
 - `osint-state-isolation` → RC-B (F7,F10,F20,F25)
 - `osint-resource-bounds` → RC-E (F9,F11,F18,F23)
