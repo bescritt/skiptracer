@@ -15,137 +15,70 @@ except BaseException:
     import builtins as bi
 
 
-def _make_scraper():
-    """Return a cfscrape scraper or None if the optional dep is unavailable."""
-    try:
-        import cfscrape
-        return cfscrape.create_scraper()
-    except Exception as e:
-        print(
-            "  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
-            "cfscrape unavailable (install with: pip install "
-            "skiptracer[scraper]): {}\n".format(e) + bc.CEND)
-        return None
+def _get_api_key(env):
+    # prefer explicit HIBP API key env var; support legacy name
+    return env.get('HAVEIBEENPWNED_API_KEY') or env.get('HIBP_API_KEY') or env.get('HAVEIBEENPWNED_API_KEY')
 
 
 class HaveIBeenPwwnedGrabber(PageGrabber):
     """
-    HackedEmails.com scraper for email compromise lookups
+    Use HIBP v3 API directly (requires API key). Falls back gracefully when
+    no key is available or network errors occur.
     """
     def get_info(self, email, category):
-        """
-        Uniform call for framework
-        """
-        print("[" + bc.CPRP + "?" + bc.CEND + "] " +
-              bc.CCYN + "HaveIbeenPwned" + bc.CEND)
-        self.count = 0
-        self.resurl = 0
-        self.trymore(email)
-
-    def trymore(self, email):
-        """
-        Actual logic for lookup and re-try
-        """
-        while self.resurl == 0:
-
-            self.count += 1
-            url = 'https://haveibeenpwned.com/api/v3/breachedaccount/{}'.format(
-                email)
-
-            scraper = _make_scraper()
-            if scraper is None:
-                return
-            headers = {
-                'user-agent': self.ua,
-                'hibp-api-key': self.env['HAVEIBEENPWNED_API_KEY']
-            }
-            self.source = scraper.get(url, headers=headers).content
-            self.source = str(
-                self.source).replace(
-                "true",
-                "True").replace(
-                "false",
-                "False")
-
-            self.source = ast.literal_eval(self.source) #cast string to bytes
-            self.source = self.source.decode('utf8') #decode string
-            self.source = ast.literal_eval(self.source) #cast string to dict
-
-            self.resurl = 1
-            for dataset in self.source:
-                self.result = dataset
-
-                if self.result:
-                    self.breach = self.result['BreachDate']
-                    self.domain = self.result['Domain']
-                    self.title = self.result['Title']
-                    self.exposes = self.result['DataClasses']
-                    self.info_dict.update(
-                        {
-                            "BreachDate": self.breach,
-                            "Domain": self.domain,
-                            "Title": self.title,
-                            "DataExposed": self.exposes})
-                    print(
-                        "  [" +
-                        bc.CGRN +
-                        "+" +
-                        bc.CEND +
-                        "] " +
-                        bc.CRED +
-                        "Dump Name: " +
-                        bc.CEND +
-                        self.title)
-                    print(
-                        "    [" +
-                        bc.CGRN +
-                        "=" +
-                        bc.CEND +
-                        "] " +
-                        bc.CRED +
-                        "Domain: " +
-                        bc.CEND +
-                        self.domain)
-                    print(
-                        "    [" +
-                        bc.CGRN +
-                        "=" +
-                        bc.CEND +
-                        "] " +
-                        bc.CRED +
-                        "Breach: " +
-                        bc.CEND +
-                        self.breach)
-                    print(
-                        "    [" +
-                        bc.CGRN +
-                        "=" +
-                        bc.CEND +
-                        "] " +
-                        bc.CRED +
-                        "Exposes: " +
-                        bc.CEND)
-                    for xpos in self.exposes:
-                        print(
-                            "      [" +
-                            bc.CGRN +
-                            "-" +
-                            bc.CEND +
-                            "] " +
-                            bc.CRED +
-                            "DataSet: " +
-                            bc.CEND +
-                            xpos)
-                else:
-                    print(
-                        "  [" +
-                        bc.CRED +
-                        "X" +
-                        bc.CEND +
-                        "] " +
-                        bc.CYLW +
-                        "No results were found.\n" +
-                        bc.CEND)
-
-            print()
+        """Uniform call for framework"""
+        print("[" + bc.CPRP + "?" + bc.CEND + "] " + bc.CCYN + "HaveIbeenPwned" + bc.CEND)
+        self.info_dict = {}
+        api_key = _get_api_key(self.env)
+        if not api_key:
+            print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW + "HIBP API key not configured; set HAVEIBEENPWNED_API_KEY or HIBP_API_KEY in environment" + bc.CEND)
             return self.info_dict
+
+        url = f'https://haveibeenpwned.com/api/v3/breachedaccount/{email}'
+        headers = {
+            'user-agent': self.ua,
+            'hibp-api-key': api_key,
+            'Accept': 'application/json'
+        }
+
+        try:
+            import requests
+            resp = requests.get(url, headers=headers, timeout=10)
+            if resp.status_code == 404:
+                # no breaches for this account
+                print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW + "No results were found." + bc.CEND)
+                return self.info_dict
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            logging.debug("HIBP request failed: %s", e)
+            print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW + "HIBP query error: {}".format(e) + bc.CEND)
+            return self.info_dict
+
+        # data is a list of breach dicts
+        for dataset in data:
+            if not dataset:
+                continue
+            self.breach = dataset.get('BreachDate')
+            self.domain = dataset.get('Domain')
+            self.title = dataset.get('Title')
+            self.exposes = dataset.get('DataClasses', [])
+            self.info_dict.update({
+                "BreachDate": self.breach,
+                "Domain": self.domain,
+                "Title": self.title,
+                "DataExposed": self.exposes
+            })
+            print("  [" + bc.CGRN + "+" + bc.CEND + "] " + bc.CRED + "Dump Name: " + bc.CEND + str(self.title))
+            print("    [" + bc.CGRN + "=" + bc.CEND + "] " + bc.CRED + "Domain: " + bc.CEND + str(self.domain))
+            print("    [" + bc.CGRN + "=" + bc.CEND + "] " + bc.CRED + "Breach: " + bc.CEND + str(self.breach))
+            print("    [" + bc.CGRN + "=" + bc.CEND + "] " + bc.CRED + "Exposes: " + bc.CEND)
+            for xpos in self.exposes:
+                print("      [" + bc.CGRN + "-" + bc.CEND + "] " + bc.CRED + "DataSet: " + bc.CEND + str(xpos))
+
+        print()
+        return self.info_dict
+
+
+# Backwards/expected name for other callers/tests
+HaveIBeenPwnedGrabber = HaveIBeenPwwnedGrabber

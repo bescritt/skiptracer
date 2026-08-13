@@ -24,6 +24,16 @@ HIBP plugin
 - Set HAVEIBEENPWNED_API_KEY or HIBP_API_KEY in the environment (or provide via .env) before using the plugin or the `enrich-email` CLI.
 - The plugin no longer depends on cfscrape and parses JSON safely.
 
+HIBP smoke test
+- A live smoke test is available at test/test_hibp_smoke.py. It runs only when HAVEIBEENPWNED_API_KEY or HIBP_API_KEY is present in the environment, otherwise it is skipped.
+- To run the smoke test locally with your key:
+
+  $ export HAVEIBEENPWNED_API_KEY=\"your_key_here\"
+  $ .venv/bin/activate && pytest -q test/test_hibp_smoke.py
+
+Namechk2 resilience
+- namechk2 now detects common anti-bot responses (403/429, captcha/cloudflare challenge, "please enable javascript", etc.) and returns {'blocked': True, 'reason': ...} so agents can escalate or fallback.
+
 Namechk2 note
 - `namechk2` performs POSTs to namechk.com which may block automated requests; treat it as fragile. Agents should detect blocking, respect rate limits, and escalate to human review if automated access fails.
 

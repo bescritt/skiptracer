@@ -34,11 +34,33 @@ class NameChkGrabber(PageGrabber):
         webproxy = False # this needs to be a setting
         proxy = "" # placeholder for now
 
+        def _is_blocked_response(resp_text, status_code):
+            """Detect common anti-bot/blocking responses.
+            Returns a reason string or None if not blocked.
+            """
+            if status_code in (403, 429):
+                return 'http_status_{}'.format(status_code)
+            lower = (resp_text or '').lower()
+            blockers = ('captcha', 'recaptcha', 'cloudflare', 'please enable javascript',
+                        'access denied', 'forbidden', 'verify you are human', 'bot')
+            for token in blockers:
+                if token in lower:
+                    return 'contains_{}'.format(token.replace(' ', '_'))
+            return None
+
         if webproxy:
             proto = proxy.split("/")[0].split(":")[0]
             r = ses.get('https://namechk.com/', proxies={proto: bi.proxy})
         else:
             r = ses.get('https://namechk.com/')
+
+        # detect anti-bot / blocked responses early
+        blocked_reason = _is_blocked_response(getattr(r, 'text', ''), getattr(r, 'status_code', 0))
+        if blocked_reason:
+            print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+                  "NameChk appears to be blocking automated requests: {}\n".format(blocked_reason) + bc.CEND)
+            return {'blocked': True, 'reason': blocked_reason}
+
         cookies = r.cookies.get_dict()
         services = ["facebook", "youtube", "twitter", "instagram",
                     "blogger", "googleplus", "twitch", "reddit", "ebay", "wordpress",
@@ -112,6 +134,12 @@ class NameChkGrabber(PageGrabber):
                     proto: proxy})
         else:
             r = ses.post('https://namechk.com/', headers=headers, data=data)
+        # detect blocking after the post
+        blocked_reason = _is_blocked_response(getattr(r, 'text', ''), getattr(r, 'status_code', 0))
+        if blocked_reason:
+            print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+                  "NameChk appears to be blocking automated requests on POST: {}\n".format(blocked_reason) + bc.CEND)
+            return {'blocked': True, 'reason': blocked_reason}
         try:
             cookies = r.cookies.get_dict()
             cooked = str(get_cookie(cookies)[0])
@@ -145,6 +173,13 @@ class NameChkGrabber(PageGrabber):
                     'https://namechk.com/services/check',
                     headers=headers,
                     data=datastring)
+                # detect blocking on service check response
+                blocked_reason = _is_blocked_response(getattr(response, 'text', ''), getattr(response, 'status_code', 0))
+                if blocked_reason:
+                    print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+                          "NameChk appears to be blocking automated requests on service check: {}\n".format(blocked_reason) + bc.CEND)
+                    return {'blocked': True, 'reason': blocked_reason}
+
                 jload = json.loads(response.text)
                 if jload['available'] == False:
                     if jload['callback_url'] == "":
