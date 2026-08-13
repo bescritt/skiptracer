@@ -117,3 +117,5 @@ Apache License 2.0. See `LICENSE` for the full text.
 
 ## Agent adapters and runbook
 A hermes-brain style adapter lives in `tools/agent_adapters.py` with a short runbook in `docs/AGENT_RUNBOOK.md`. It provides parallel_probe, retries, verification, synthesis, and persistence helpers to safely orchestrate plugin calls.
+
+HIBP plugin: the haveibeenpwned plugin uses the HIBP v3 API and requires an API key via HAVEIBEENPWNED_API_KEY or HIBP_API_KEY environment variable. The plugin no longer uses cfscrape and parses JSON safely. See docs/AGENT_RUNBOOK.md for details.

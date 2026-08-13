@@ -19,9 +19,18 @@ Quick commands
 Safety
 - Public sources only. Respect ToS and robots.txt. Pause and notify human on paywalls or unredacted PII.
 
+HIBP plugin
+- The haveibeenpwned plugin now uses the official HIBP v3 API and requires an API key.
+- Set HAVEIBEENPWNED_API_KEY or HIBP_API_KEY in the environment (or provide via .env) before using the plugin or the `enrich-email` CLI.
+- The plugin no longer depends on cfscrape and parses JSON safely.
+
+Namechk2 note
+- `namechk2` performs POSTs to namechk.com which may block automated requests; treat it as fragile. Agents should detect blocking, respect rate limits, and escalate to human review if automated access fails.
+
 Files
-- skiptracer.tools.agent_adapters: adapter implementation
+- skiptracer.tools.agent_adapters: adapter implementation (now programmatic persist control)
 - skiptracer.tools.agent_cli: headless CLI
+- src/skiptracer/plugins/haveibeenpwned: updated to use HIBP v3 API (API key required)
 - test/test_agent_adapters.py: unit tests
 - test/test_agent_cli.py: CLI tests
 
