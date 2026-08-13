@@ -104,8 +104,13 @@ class DefaultMenus:
     def grabplugins(self, plugin_type, plugin_list):
         """Grab a list of relevant plugins."""
         for i in plugin_list:
-            tc = ast.literal_eval(plugin_list[i])
-            plugin_type.append({'key': i, 'text': tc[0] + " - " + tc[1]})
+            try:
+                tc = ast.literal_eval(plugin_list[i])
+            except (ValueError, SyntaxError):
+                # Malformed config entry -> skip it, do not crash the menu.
+                continue
+            if isinstance(tc, (list, tuple)) and len(tc) >= 2:
+                plugin_type.append({'key': i, 'text': tc[0] + " - " + tc[1]})
 
         return plugin_type + self.default_items
 

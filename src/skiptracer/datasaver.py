@@ -22,6 +22,9 @@ class DataSaver:
 
     def writeout(self):
         """Write collected data to disk and report status to STDOUT."""
+        if not getattr(bi, "filename", None):
+            # No output filename was chosen (user declined saving) -> no-op.
+            return None
         try:
             with open(bi.filename, "w") as pg:
                 pg.write(json.dumps(bi.outdata, indent=2))

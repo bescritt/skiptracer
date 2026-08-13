@@ -17,7 +17,9 @@ misbehave are marked [BUG]; modes that are merely fragile traps are [TRAP].
 ## Shared builtins (bi) stowage
 - N06 [TRAP] `base.get_source` checks `bi.proxy != ''`; if bi.proxy is ever
   None (not ''), truthiness path differs. (base.py:73)
-- N07 [BUG] DataSaver only sets bi.filename when user answers 'y' to save; if
+- N07 [FIXED] DataSaver only sets bi.filename when user answers 'y' to save; if
+  'n', writeout() raised AttributeError. Fixed: writeout() returns None (no-op)
+  when bi.filename is unset. (datasaver.py; commit b03a231+)
   'n', bi.filename is never set, yet writeout() does open(bi.filename) ->
   AttributeError. (datasaver.py:13-21,26)
 - N08 [TRAP] DataSaver.__init__ resets bi.outdata; if skipped (subclass),
@@ -44,7 +46,9 @@ misbehave are marked [BUG]; modes that are merely fragile traps are [TRAP].
 - N22 [pass] get_html -> html.parser BeautifulSoup.
 
 ## random_line / _package_path
-- N23 [BUG] random_line() does next(afile) unguarded; EMPTY UA DB raises
+- N23 [FIXED] random_line() does next(afile) unguarded; EMPTY UA DB raised
+  StopIteration, crashing PageGrabber init. Fixed: returns "" on empty/missing
+  DB and now closes the fd (also closes N25). (base.py)
   StopIteration -> crashes PageGrabber init. (base.py:43)
 - N24 [pass] 1-line DB returns that line.
 - N25 [BUG] random_line opens the file but never closes it -> fd leak.
@@ -70,7 +74,9 @@ misbehave are marked [BUG]; modes that are merely fragile traps are [TRAP].
   proxies effectively never expire. (proxygrabber.py:80)
 - N35 [BUG] new_proxy reads `str(cwd)+'/storage/proxies.txt'` while storage_dir
   is repo-relative -> wrong path when cwd != repo root. (proxygrabber.py:20-25,82)
-- N36 [BUG] remove_proxy compares `i != str(remline)` but lines keep their
+- N36 [FIXED] remove_proxy compares `i != str(remline)` but lines keep their
+  newline -> the bad proxy is never removed. Fixed: strip newlines before
+  comparing. (proxygrabber.py)
   newline -> the bad proxy is never actually removed. (proxygrabber.py:32-39)
 - N37 [TRAP] get_proxies scrapes free-proxy-list markup; markup change ->
   silently empty set. (proxygrabber.py:59-66)
@@ -85,7 +91,9 @@ misbehave are marked [BUG]; modes that are merely fragile traps are [TRAP].
   item) silently selected instead of rejected. (default_menus.py:78)
 - N42 [BUG] negative selection also wraps to a valid (wrong) item.
   (default_menus.py:78)
-- N43 [BUG] grabplugins ast.literal_eval on cfg tuple; malformed value ->
+- N43 [FIXED] grabplugins ast.literal_eval on cfg tuple; malformed value ->
+  ValueError/SyntaxError, uncaught, crashing the menu. Fixed: skip malformed
+  entries. (default_menus.py)
   ValueError uncaught -> menu crash. (default_menus.py:107)
 - N44 [TRAP] grabuserchoice wraps EOFError/KeyboardInterrupt and calls
   sys.exit(0) -> non-interactive run exits the whole process, not just menu.
@@ -97,7 +105,9 @@ misbehave are marked [BUG]; modes that are merely fragile traps are [TRAP].
 ## load_plugins / colors / entry points
 - N47 [pass] load_plugins on missing group -> {} (not None/crash).
   (skiptracer.py:51-61)
-- N48 [BUG] a registered plugin whose p.load() raises (bad import) kills the
+- N48 [FIXED] a registered plugin whose p.load() raises (bad import) kills the
+  whole app. Fixed: load_plugins isolates the broken plugin (log + skip).
+  (skiptracer.py)
   whole app -> no per-plugin isolation. (skiptracer.py:59-60)
 - N49 [pass] colors.use returns CEND for unknown code (graceful).
   (default_colors.py:13-16)
@@ -106,6 +116,11 @@ misbehave are marked [BUG]; modes that are merely fragile traps are [TRAP].
   pattern is fragile. (default_colors.py:14-16)
 
 ## Summary
-Real bugs found by NEW tests: N07, N10, N11, N14, N18, N23, N25, N33, N34,
-N35, N36, N41, N42, N43, N48 (15 confirmed-defect modes). The rest are
-fragility traps pinned so they cannot regress silently.
+Real defects found by NEW tests: N07, N10, N11, N14, N18, N23, N25, N33, N34,
+N35, N36, N41, N42, N43, N48 (15 confirmed-defect modes). Of these, 5 are now
+FIXED in source (N07, N23, N36, N43, N48 -- plus N25 fd-leak closed via N23):
+datasaver.writeout no-op when filename unset; random_line handles empty UA DB;
+remove_proxy strips newlines; grabplugins skips malformed config; load_plugins
+isolates broken plugins. The remaining 10 (N10, N11, N14, N18, N25-partial,
+N33, N34, N35, N41, N42) are documented and pinned by tests but not yet fixed
+in source. The rest are fragility traps pinned so they cannot regress silently.

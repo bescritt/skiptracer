@@ -33,7 +33,7 @@ def remove_proxy(fn, remline):
     d = f.readlines()
     f.seek(0)
     for i in d:
-        if i != str(remline):
+        if i.strip() != str(remline).strip():
             f.write(i)
     f.truncate()
     f.close()

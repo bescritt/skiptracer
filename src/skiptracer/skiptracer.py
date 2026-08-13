@@ -57,5 +57,9 @@ class SkipTracer:
         else:  # pragma: no cover - older importlib.metadata
             eps = entry_points().get(plugin, [])
         for p in eps:
-            plugin_dict[p.name] = p.load()
+            try:
+                plugin_dict[p.name] = p.load()
+            except Exception as loaderr:
+                # A single broken plugin must not kill the whole app.
+                print("  [X] plugin '%s' failed to load: %s" % (p.name, loaderr))
         return plugin_dict

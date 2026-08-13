@@ -40,12 +40,20 @@ def _package_path(*parts):
 
 def random_line():
     """Get a random User-Agent string from the local DB file."""
-    afile = open(_package_path('user-agents.db'))
-    line = next(afile)
+    try:
+        afile = open(_package_path('user-agents.db'))
+    except OSError:
+        return ""
+    try:
+        line = next(afile)
+    except StopIteration:
+        afile.close()
+        return ""
     for num, aline in enumerate(afile):
         if random.randrange(num + 2):
             continue
         line = aline
+    afile.close()
     return line.strip()
 
 
