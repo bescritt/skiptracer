@@ -6,7 +6,7 @@ import sys
 import pytest
 
 
-VENV_PY = "/home/owner/skiptracer/.venv/bin/python"
+VENV_PY = sys.executable  # use the interpreter running pytest (portable: local + CI)
 
 
 def _run_cli(stdin="", timeout=30):
