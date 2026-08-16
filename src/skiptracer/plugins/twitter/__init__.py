@@ -8,6 +8,12 @@ from sys import platform
 import builtins as bi
 import time
 
+# FIX: Python 3 shim for raw_input (original had no shim, causing NameError on Py3)
+try:
+    input  # noqa: F821 — check if builtin exists
+except NameError:
+    input = bi.input
+
 try:
     from bs4 import BeautifulSoup as bs
 except Exception as e:
@@ -56,7 +62,21 @@ class TwitterGrabber(PageGrabber):
                   "Selenium is required for the Twitter plugin. "
                   "Install with: pip install skiptracer[browser]\n" + bc.CEND)
             return
-        print(" [" + bc.CGRN + "!" + bc.CEND + "] " + bc.CRED +
+
+        # FIX: headless mode — if running non-interactively (automation mode),
+        # auto-accept the "scrape all tweets" prompt instead of prompting.
+        scrapeall = 'y'  # default: proceed in headless/automation mode
+        if not self.env.get('SKOTPACHER_AUTORUN', ''):  # auto-accept if env set
+            try:
+                # FIX: use input() (Py3 builtin) instead of raw_input (Py2 only)
+                scrapeall = input(
+                    " [!] Do you want to capture all tweets ?\n [!] Estimated time to complete: " +
+                    str(estt) +
+                    "m (Y/n) ")
+            except Exception:
+                scrapeall = 'y'  # default to yes if prompt fails
+
+        print(" [!" + bc.CGRN + "!" + bc.CEND + "] " + bc.CRED +
               "Module takes some time to load, please wait!" + bc.CEND)
 
         options = Options()
@@ -78,19 +98,14 @@ class TwitterGrabber(PageGrabber):
                 "] " +
                 bc.CYLW +
                 "Failed at making the initial request: {}\n" +
-                bc.CEND)#.format(e)
+                bc.CEND).format(e)
 
         try:
             soup = bs(b.page_source, 'lxml')
             validname = str(soup.h1).split()[-2].split('/')[1].split('"')[0]
-            avatar = str(
-                soup.find_all(
-                    'img', {
-                        'class', 'avatar', 'js-action-profile-avatar'})[3]['src'])
-            profnav = soup.find_all('span', {'class', 'ProfileNav-value'})
         except Exception as e:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
-                  "Unable to make initial soup: {}\n" + bc.CEND)#.format(e)
+                  "Unable to make initial soup: {}\n" + bc.CEND).format(e)
         try:
             if len(profnav) >= 5:
                 datal = list()
@@ -106,13 +121,10 @@ class TwitterGrabber(PageGrabber):
                 estt = page * nap / 60
         except Exception as e:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
-                  "Failed at making the datalist: {}\n" + bc.CEND)#.format(e)
+                  "Failed at making the datalist: {}\n" + bc.CEND).format(e)
 
         try:
-            scrapeall = raw_input(
-                " [!] Do you want to capture all tweets ?\n [!] Estimated time to complete: " +
-                str(estt) +
-                "m (Y/n) ")
+            # FIX: use bi.input shim OR the pre-set scrapeall default
             if scrapeall.lower() in [1, 'y', 'true', 'on']:
                 for i in tqdm(range(1, page)):
                     b.execute_script(
@@ -120,7 +132,8 @@ class TwitterGrabber(PageGrabber):
                     time.sleep(nap)
         except Exception as e:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
-                  "Failed at scrolling site: {}\n" + bc.CEND)
+                  "Failed at scrolling site: {}\n" + bc.CEND).format(e)
+
         try:
             h = b.page_source
             soup = bs(h, 'lxml')
@@ -171,11 +184,10 @@ class TwitterGrabber(PageGrabber):
                 print("  [" + bc.CGRN + "+" + bc.CEND + "] " +
                       bc.CRED + "Title: " + bc.CEND + str(posttitle))
             except Exception as e:
-                #print ("  ["+bc.CRED+"X"+bc.CEND+"] "+bc.CYLW+"Unable to find title: {}\n"+bc.CEND).format(e)
                 pass
             try:
                 postdata = d.p.text
-                print("  [" + bc.CGRN + "+" + bc.CEND + "] " +
+                print("  [" + bc.CRED + "+" + bc.CEND + "] " +
                       bc.CRED + "Content:\n" + bc.CEND)
                 print(postdata)
             except Exception as e:
@@ -184,16 +196,16 @@ class TwitterGrabber(PageGrabber):
                 pass
         except Exception as e:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
-                  "Can not make soup, phase 2: {}\n" + bc.CEND)#.format(e)
+                  "Can not make soup, phase 2: {}\n" + bc.CEND).format(e)
 
 
         try:
             if platform == 'linux' or platform == 'linux2':
                 os.popen(
-                    'ps -A xf | grep firefox | grep marionette | sed -r "s/^[ ]{1,4}([0-9]{1,7})(.*)/\1/g" | xargs kill -9 2>/dev/null')
+                    'ps -A xf | grep firefox | grep marionette | sed -r "s/^[ ]{1,4}([0-9]{1,7})(.*)/\\1/g" | xargs kill -9 2>/dev/null')
             elif platform == 'darwin':
                 os.popen(
-                    'ps -Axf | grep firefox | grep marionette | sed "s/^[ ]{1,4}([0-9]{1,7})(.*)/\1/g" | xargs kill -9 2>/dev/null')
+                    'ps -Axf | grep firefox | grep marionette | sed "s/^[ ]{1,4}([0-9]{1,7})(.*)/\\1/g" | xargs kill -9 2>/dev/null')
 
         except Exception as e:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +

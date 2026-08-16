@@ -9,7 +9,6 @@ import traceback
 import os
 import random
 import time
-import random
 
 try:
     import __builtin__ as bi
@@ -74,29 +73,28 @@ def new_proxy():
     Select random proxy form list, if no list,
     generate a new one and test them for connectivity (living)
     """
-    cwd = os.getcwd()
     try:
         now = time.time()
-        if os.stat(str(cwd) + '/storage/proxies.txt').st_mtime < now - 7 * 86000:
-            os.remove(str(cwd) + '/storage/proxies.txt')
-        with open(str(cwd) + '/storage/proxies.txt', 'r') as proxies:
+        if os.stat(output_file).st_mtime < now - 7 * 86400:
+            os.remove(output_file)
+        with open(output_file, 'r') as proxies:
             bi.proxy = str(random.choice(proxies.readlines())).strip()
             proxy = bi.proxy
         print(
-            "\t  [" +
-            bc.CRED +
-            "::ATTENTION::" +
-            bc.CEND +
-            "]" +
-            bc.CYLW +
-            " Proxy: " +
-            bi.proxy +
-            bc.CEND +
-            " [" +
-            bc.CRED +
-            "::ATTENTION::" +
-            bc.CEND +
-            "]")
+            "\t  ["
+            + bc.CRED
+            + "::ATTENTION::"
+            + bc.CEND
+            + "]"
+            + bc.CYLW
+            + " Proxy: "
+            + bi.proxy
+            + bc.CEND
+            + " ["
+            + bc.CRED
+            + "::ATTENTION::"
+            + bc.CEND
+            + "]")
         return proxy
     except Exception as noproxyfile:  # Start generating the proxy list
         proxies = get_proxies()  # Call to grab results, returns a list
@@ -106,23 +104,23 @@ def new_proxy():
             proxy = random.choice(list(proxies))
             for xproto in ['http', 'https']:
                 try:
-                    print(("  [" +
-                           bc.CRED +
-                           "X" +
-                           bc.CEND +
-                           "] " +
-                           bc.CYLW +
-                           "Testing %s proxy: %s" +
-                           bc.CEND) %
+                    print(("  ["
+                           + bc.CRED
+                           + "X"
+                           + bc.CEND
+                           + "] "
+                           + bc.CYLW
+                           + "Testing %s proxy: %s"
+                           + bc.CEND) %
                           (str(xproto).strip(), str(proxy).strip()))
                     response = requests.get(
                         url, proxies={xproto: proxy}, timeout=2)
                     if response:
                         write_file(
-                            str(xproto) +
-                            "://" +
-                            str(proxy) +
-                            "\n",
+                            str(xproto)
+                            + "://"
+                            + str(proxy)
+                            + "\n",
                             output_file)
                 except BaseException:
                     pass

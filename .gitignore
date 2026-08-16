@@ -17,3 +17,7 @@ __pycache__/
 .vscode/
 .mypy_cache/
 htmlcov/
+# Probe artifacts (dossier output JSON manifests)
+email-*.json
+_dossier_probe*.py
+output.json

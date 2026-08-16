@@ -2,6 +2,13 @@ from __future__ import print_function
 #
 # NameChk scraper: no1special
 #
+# FIXED version: graceful degradation when the /services/check endpoint
+# returns non-JSON. The original code called `return` on the first parse
+# error, aborting the entire service sweep. Now it logs the error, records
+# a structured result, and continues to the next service.
+#
+# Original defect: namechk.com /services/check returns non-JSON
+# "Could not load results into JSON format" — the entire sweep aborts.
 from bs4 import BeautifulSoup
 from lxml import html
 from requests.utils import quote
@@ -18,27 +25,35 @@ except ImportError:
     from urllib.parse import urlencode
 
 
-
 class NameChkGrabber(PageGrabber):
     """
     Myspace.com scraper for email lookups
+
+    NOTE: Despite the docstring, this scrapes namechk.com for username
+    correlation across 80+ platforms.
     """
     def get_info(self, email, type):
         """
-        Looksup user accounts by given email
+        Looks up user accounts by given email
         """
         print("[" + bc.CPRP + "?" + bc.CEND + "] " +
               bc.CCYN + "NameChk" + bc.CEND)
         username = str(email).split("@")[0]
         ses = requests.Session()
-        webproxy = False # this needs to be a setting
-        proxy = "" # placeholder for now
+        webproxy = False  # this needs to be a setting
+        proxy = ""  # placeholder for now
 
         if webproxy:
             proto = proxy.split("/")[0].split(":")[0]
             r = ses.get('https://namechk.com/', proxies={proto: bi.proxy})
         else:
             r = ses.get('https://namechk.com/')
+
+        if r.status_code != 200:
+            print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+                  "Failed to load namechk.com (HTTP {})\n".format(r.status_code) + bc.CEND)
+            return {"error": "namechk_homepage_unavailable", "status_code": r.status_code}
+
         cookies = r.cookies.get_dict()
         services = ["facebook", "youtube", "twitter", "instagram",
                     "blogger", "googleplus", "twitch", "reddit", "ebay", "wordpress",
@@ -63,10 +78,9 @@ class NameChkGrabber(PageGrabber):
         csrf = ''
         try:
             csrf = str(soup.find_all(name="meta")[-1]).split('"')[1]
-        except Exception as e:
+        except Exception:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " +
                   bc.CYLW + "Could not find CSRF token.\n" + bc.CEND)
-            pass  # return # print e
         tree = html.fromstring(r.text)
 
         def get_cookie(cookies):
@@ -78,6 +92,7 @@ class NameChkGrabber(PageGrabber):
             vals = list(
                 set(tree.xpath("//input[@name='authenticity_token']/@value")))
             return vals[0] if vals else ''
+
         token = get_token()
         headers = {"authority": "namechk.com",
                    "method": "POST",
@@ -93,9 +108,9 @@ class NameChkGrabber(PageGrabber):
                    "x-csrf-token": csrf,
                    "x-requested-with": "XMLHttpRequest",
                    }
-        ncook = "_ga=GA1.2.1058625756.1526852807; _gid=GA1.2.371808416.1526852807; _fssid=9c20a864-551e-470f-bd74-6640f9cc9058; __qca=P0-1810536716-1526852807185; _fsuid=e091827a-8a09-4cb9-b841-4bb78b6bc579; __gads=ID=6af13fe549a859bd:T=1526852808:S=ALNI_MZI5yxUiBsOz-2qmDmok0tVeISwvw;" + str(get_cookie(cookies)[
-                                                                                                                                                                                                                                                                                                     0])
+        ncook = "_ga=GA1.2.1058625756.1526852807; _gid=GA1.2.371808416.1526852807; _fssid=9c20a864-551e-470f-bd74-6640f9cc9058; __qca=P0-1810536716-1526852807185; _fsuid=e091827a-8a09-4cb9-b841-4bb78b6bc579; __gads=ID=6af13fe549a859bd:T=1526852808:S=ALNI_MZI5yxUiBsOz-2qmDmok0tVeISwvw;" + str(get_cookie(cookies)[0])
         headers['cookie'] = ncook
+
         data = [
             ('utf8', '%E2%9C%93'),
             ('authenticity_token', quote(token, safe="")),
@@ -112,21 +127,28 @@ class NameChkGrabber(PageGrabber):
                     proto: proxy})
         else:
             r = ses.post('https://namechk.com/', headers=headers, data=data)
+
         try:
             cookies = r.cookies.get_dict()
             cooked = str(get_cookie(cookies)[0])
-        except Exception as e:
-            # print ("  ["+bc.CRED+"X"+bc.CEND+"] "+bc.CYLW+"Could not locate required cookies.\n"+bc.CEND)
+        except Exception:
             pass
+
+        # FIX: Wrap the initial JSON parse in try/except. If the page returns
+        # non-JSON (e.g. "Could not load results into JSON format"), record
+        # the error and return early — but with a structured result so callers
+        # know why it failed, rather than silently returning None.
         try:
             encres = r.text.encode('ascii', 'ignore').decode('utf8')
             encresdic = json.loads(encres)
             datareq = {}
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError) as e:
             print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
-                  "Could not load results into JSON format.\n" + bc.CEND)
-            return  # print e
+                  "Could not load results into JSON format: {}\n".format(e) + bc.CEND)
+            # Return a structured error so the caller can detect the failure mode
+            return {"error": "json_parse_failed", "detail": str(e), "raw_snippet": r.text[:200]}
 
+        results = {}
         for xservice in services:
             for dictkey in encresdic.keys():
                 datareq["token"] = quote(encresdic[dictkey], safe="")
@@ -134,22 +156,30 @@ class NameChkGrabber(PageGrabber):
             datastring = ""
             try:
                 for datakey in datareq.keys():
-                    datastring += "{}={}&".format(datakey, datareq[datakey])
-                datastring += "service={}".format(xservice)
-            except Exception as e:
+                    datastring += "{}={}&\n".format(datakey, datareq[datakey])
+                datastring += "service={}\n".format(xservice)
+            except Exception:
                 print("  [" + bc.CRED + "X" + bc.CEND + "] " +
                       bc.CYLW + "Could not find CSRF token.\n" + bc.CEND)
-                return
+                results[xservice] = {"error": "no_csrf_token"}
+                continue  # FIX: continue to next service instead of aborting
+
             try:
                 response = ses.post(
                     'https://namechk.com/services/check',
                     headers=headers,
                     data=datastring)
-                jload = json.loads(response.text)
-                if jload['available'] == False:
-                    if jload['callback_url'] == "":
-                        pass
-                    else:
+                # FIX: Wrap per-service JSON parse in try/except
+                try:
+                    jload = json.loads(response.text)
+                except (json.JSONDecodeError, ValueError) as pe:
+                    print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
+                          "Service {} returned non-JSON: {}\n".format(xservice, str(pe)[:100]) + bc.CEND)
+                    results[xservice] = {"error": "non_json_response", "raw_snippet": response.text[:200]}
+                    continue  # FIX: skip this service, continue sweep
+
+                if jload.get('available', None) is False:
+                    if jload.get('callback_url', "") != "":
                         print(
                             "  [" +
                             bc.CGRN +
@@ -159,12 +189,18 @@ class NameChkGrabber(PageGrabber):
                             bc.CRED +
                             "Acct Exists: " +
                             bc.CEND +
-                            "{}".format(
-                                jload['callback_url']))
-
+                            "{}".format(jload.get('callback_url', '')))
+                        results[xservice] = {"available": False, "callback_url": jload['callback_url']}
+                    else:
+                        results[xservice] = {"available": False, "callback_url": ""}
+                else:
+                    results[xservice] = {"available": jload.get('available', None), "callback_url": jload.get('callback_url', '')}
             except Exception as e:
                 print("  [" + bc.CRED + "X" + bc.CEND + "] " + bc.CYLW +
-                      "Could not find required datasets.\n" + bc.CEND)
-                return  # pass
+                      "Could not find required datasets for {}: {}\n".format(xservice, str(e)[:100]) + bc.CEND)
+                results[xservice] = {"error": str(e)}
+                continue  # FIX: continue to next service instead of aborting
+
         print()
-        return
+        # FIX: return structured results dict so callers get data
+        return {"username": username, "results": results}

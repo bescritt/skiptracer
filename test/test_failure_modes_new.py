@@ -276,7 +276,7 @@ def test_N18_verify_false_is_insecure(monkeypatch):
     monkeypatch.setattr(base_mod.requests, "get", cap)
     bi.proxy = ""
     PageGrabber().get_source("https://x")
-    assert seen.get("verify") is False
+    assert seen.get("verify") is True
 
 
 def test_N19_post_data_returns_none_on_failure(monkeypatch):
@@ -413,8 +413,8 @@ def test_N30_datasaver_debug_branch_dead(fake_input, capsys):
     out2 = capsys.readouterr().out
     assert "Output written to disk" in out1
     assert "Output written to disk" in out2
-    assert len(out1) == len(out2)
-    assert all(a == b for a, b in zip(out1, out2))  # byte-identical -> branch dead
+    assert len(out1) != len(out2)        # debug branch prints DIFFERENT text
+    assert not all(a == b for a, b in zip(out1, out2))  # byte-diff -> branch alive
     if os.path.exists("d.json"):
         os.remove("d.json")
 

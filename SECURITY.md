@@ -2,14 +2,14 @@
 
 ## Scope
 
-Skiptracer is a passive OSINT research tool. It collects information that
-targets have exposed on public websites. It must not be used to access
-non-public data or to circumvent access controls.
+Skiptracer functions as a passive OSINT research tool. It collects information that
+targets have exposed on public websites. It must not access
+non-public data or circumvent access controls.
 
 ## Reporting a vulnerability
 
 If you discover a security issue in Skiptracer (for example, code that exposes
-credentials, makes unsafe network requests, or could be abused), please report
+credentials, makes unsafe network requests, or could suffer abuse), please report
 it privately rather than opening a public issue.
 
 - Open a security advisory on GitHub, or

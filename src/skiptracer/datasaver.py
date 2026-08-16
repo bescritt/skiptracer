@@ -15,9 +15,15 @@ class DataSaver:
         bi.output = input(
             "[Do we wish to save returned data to disk? (Y/n)]: ")
         if str(bi.output).lower() == "y":
-            bi.filename = input(
+            raw = input(
                 "[Please provide the filename for output? "
                 "(somefile.txt|somefile.json)]: ")
+            # Guard against path traversal: reject bare filenames that escape
+            # the working directory via '..' or absolute paths.
+            if raw.startswith("/") or raw.startswith(".."):
+                print("[!] Unsafe filename rejected, using default.")
+                raw = "output.json"
+            bi.filename = raw
         self.writeout()
 
     def writeout(self):
@@ -25,18 +31,31 @@ class DataSaver:
         if not getattr(bi, "filename", None):
             # No output filename was chosen (user declined saving) -> no-op.
             return None
-        try:
-            with open(bi.filename, "w") as pg:
-                pg.write(json.dumps(bi.outdata, indent=2))
+        fname = bi.filename
+        # Guard against path-traversal: reject filenames that escape
+        # the current working directory via ".." or absolute paths.
+        if fname.startswith("/") or fname.startswith("..") or fname.startswith("~"):
             print(
-                ("  [{}X{}] {} Output written to disk: ./{}\n{}").format(
-                    bc.CRED, bc.CEND, bc.CYLW, bi.filename, bc.CEND))
+                ("  [{}X{}] {} Refusing unsafe filename: {}\n{}").format(
+                    bc.CRED, bc.CEND, bc.CYLW, fname, bc.CEND))
+            return None
+        try:
+            with open(fname, "w") as pg:
+                pg.write(json.dumps(bi.outdata, indent=2))
+            if bi.debug:
+                print(
+                    ("  [{}X{}] {} Debug: Output written to disk: ./{}\n{}").format(
+                        bc.CRED, bc.CEND, bc.CYLW, fname, bc.CEND))
+            else:
+                print(
+                    ("  [{}X{}] {} Output written to disk: ./{}\n{}").format(
+                        bc.CRED, bc.CEND, bc.CYLW, fname, bc.CEND))
         except Exception as nowriteJSON:
             if bi.debug:
                 print(
-                    ("  [{}X{}] {}Output failed to write to disk {}\n{}").format(
+                    ("  [{}X{}] {}Debug: Output failed to write to disk {}\n{}").format(
                         bc.CRED, bc.CEND, bc.CYLW, nowriteJSON, bc.CEND))
             else:
                 print(
                     ("  [{}X{}] {}Output failed to write to disk {}\n{}").format(
-                        bc.CRED, bc.CEND, bc.CYLW, bi.filename, bc.CEND))
+                        bc.CRED, bc.CEND, bc.CYLW, fname, bc.CEND))

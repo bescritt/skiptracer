@@ -18,11 +18,6 @@ except BaseException:
 class SkipTracer:
     """Kick off the SkipTracer program."""
 
-    bi.lookup = ''
-    bi.webproxy = ""
-    bi.proxy = ""
-    bi.debug = False
-
     inc_plugins = {}
     plugins_plugin = "skiptracer.plugins"
     menus_plugin = "skiptracer.menus"
@@ -34,6 +29,13 @@ class SkipTracer:
     def __init__(self, plugins):
         """Load all the different types of plugin."""
         self.inc_plugins = plugins
+        # Stow persistent state on builtins only at instance init, not at
+        # import/class-definition time. This prevents clobbering any prior
+        # state set on the builtins namespace by other code paths.
+        bi.lookup = ''
+        bi.webproxy = ""
+        bi.proxy = ""
+        bi.debug = False
 
         self.loaded_plugins_plugin_dict = self.load_plugins(
             self.plugins_plugin)

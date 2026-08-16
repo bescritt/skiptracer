@@ -13,8 +13,7 @@ python3 -m venv .venv
 .venv/bin/python -m pip install pytest pytest-cov pytest-mock responses
 ```
 
-Run the suite from a neutral directory (so the package, not the repo root, is
-imported):
+Run the suite from a neutral directory (so the package, not the repo root, imports):
 
 ```bash
 .venv/bin/python -m pytest test/ -q
@@ -34,5 +33,5 @@ imported):
 - Keep changes focused; one logical change per pull request.
 - New code ships with tests. The CI gate fails on regression.
 - Respect the Apache-2.0 license; do not introduce GPL code.
-- Be mindful of the tool's purpose: passive, public-source OSINT only. Do not
+- Exercise mindfulness of the tool's purpose: passive, public-source OSINT only. Do not
   add capabilities that target non-public data or circumvent access controls.

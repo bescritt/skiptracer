@@ -64,8 +64,8 @@ class DefaultMenus:
         self.search_string = ""
         bi.lookup = ''
         if self.useproxy():
-            print("\t  [" + bc.CRED + "::ATTENTION::" + bc.CEND + "]" +
-                  bc.CYLW + " Proxied requests are unreliable " + bc.CEND +
+            print("\t  [" + bc.CRED + "::ATTENTION::" + bc.CEND + "]"
+                  + bc.CYLW + " Proxied requests are unreliable " + bc.CEND +
                   "[" + bc.CRED + "::ATTENTION::" + bc.CEND + "]")
 
         gselect = ""
@@ -75,7 +75,11 @@ class DefaultMenus:
 
             try:
                 selection = int(input("[!] Lookup menu - Please select a number:"))
-                gselect = self.ltypes[selection - 1]['key']
+                if 1 <= selection <= len(self.ltypes):
+                    gselect = self.ltypes[selection - 1]['key']
+                else:
+                    print("Please select a number between 1 and %d!" %
+                          len(self.ltypes))
             except (ValueError, EOFError, KeyboardInterrupt) as failselect:
                 if isinstance(failselect, (EOFError, KeyboardInterrupt)):
                     print("\n [!] Input closed -- exiting.")
@@ -125,7 +129,11 @@ class DefaultMenus:
 
         try:
             selection = int(input(" [!] Select a number to continue: "))
-            gselect = plugin_type[selection - 1]['key']
+            if 1 <= selection <= len(plugin_type):
+                gselect = plugin_type[selection - 1]['key']
+            else:
+                print("Please select a number between 1 and %d!" %
+                      len(plugin_type))
         except (ValueError, EOFError, KeyboardInterrupt) as failselect:
             if isinstance(failselect, (EOFError, KeyboardInterrupt)):
                 print("\n [!] Input closed -- exiting.")
